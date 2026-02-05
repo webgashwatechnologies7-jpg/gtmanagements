@@ -85,19 +85,19 @@ const router = createRouter({
       path: '/project-types',
       name: 'project-types',
       component: () => import('../views/ProjectTypes/ProjectTypeList.vue'),
-      meta: { requiresAuth: true, roles: ['admin'] }
+      meta: { requiresAuth: true, roles: ['admin', 'sales'] }
     },
     {
       path: '/project-types/create',
       name: 'project-types.create',
       component: () => import('../views/ProjectTypes/ProjectTypeForm.vue'),
-      meta: { requiresAuth: true, roles: ['admin'] }
+      meta: { requiresAuth: true, roles: ['admin', 'sales'] }
     },
     {
       path: '/project-types/:id/edit',
       name: 'project-types.edit',
       component: () => import('../views/ProjectTypes/ProjectTypeForm.vue'),
-      meta: { requiresAuth: true, roles: ['admin'] }
+      meta: { requiresAuth: true, roles: ['admin', 'sales'] }
     },
     {
       path: '/projects',
@@ -109,13 +109,13 @@ const router = createRouter({
       path: '/projects/create',
       name: 'projects.create',
       component: () => import('../views/Projects/ProjectForm.vue'),
-      meta: { requiresAuth: true, roles: ['admin', 'project_manager'] }
+      meta: { requiresAuth: true, roles: ['admin', 'project_manager', 'sales'] }
     },
     {
       path: '/projects/:id/edit',
       name: 'projects.edit',
       component: () => import('../views/Projects/ProjectForm.vue'),
-      meta: { requiresAuth: true, roles: ['admin', 'project_manager', 'team_lead', 'team_leader'] }
+      meta: { requiresAuth: true, roles: ['admin', 'project_manager', 'team_lead', 'team_leader', 'sales'] }
     },
     {
       path: '/projects/:id',

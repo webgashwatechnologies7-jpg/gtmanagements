@@ -3,6 +3,9 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    # Serve index.html first (Vue SPA), not index.php
+    DirectoryIndex index.html index.php
+
     RewriteEngine On
 
     # Handle Authorization Header
@@ -18,8 +21,16 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
+    # API requests go to Laravel
+    RewriteCond %{REQUEST_URI} ^/api
     RewriteRule ^ index.php [L]
+
+    # Existing files and folders (e.g. /assets/*) – serve as-is
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Everything else (Vue SPA routes like /dashboard, /login) – serve index.html
+    RewriteRule ^ index.html [L]
 </IfModule>

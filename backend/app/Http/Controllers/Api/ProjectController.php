@@ -31,10 +31,13 @@ class ProjectController extends Controller
 
         // Role-based visibility:
         // - Admin: all projects
+        // - Sales: only projects they created
         // - PM: projects where project_manager_id = user
         // - TL: projects assigned to TL (project_assignments assignment_level=tl)
         // - Employee: projects assigned to employee (any assignment)
-        if ($user->hasRole('project_manager')) {
+        if ($user->hasRole('sales')) {
+            $query->where('created_by', $user->id);
+        } elseif ($user->hasRole('project_manager')) {
             $query->where('project_manager_id', $user->id);
         } elseif ($user->hasRole('team_lead')) {
             $query->whereHas('assignments', function ($q) use ($user) {
@@ -110,7 +113,7 @@ class ProjectController extends Controller
     public function store(StoreProjectRequest $request)
     {
         $user = Auth::user();
-        if (!$user->hasAnyRole(['admin', 'project_manager'])) {
+        if (!$user->hasAnyRole(['admin', 'project_manager', 'sales'])) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -147,6 +150,10 @@ class ProjectController extends Controller
         $user = Auth::user();
 
         // Enforce same visibility rules as index
+        // Sales: can only view projects they created
+        if ($user->hasRole('sales') && (int) $project->created_by !== (int) $user->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
         if ($user->hasRole('project_manager') && (int) $project->project_manager_id !== (int) $user->id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
@@ -160,7 +167,7 @@ class ProjectController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
         }
-        if (!$user->hasRole('admin') && !$user->hasRole('project_manager') && !$user->hasRole('team_lead')) {
+        if (!$user->hasRole('admin') && !$user->hasRole('project_manager') && !$user->hasRole('team_lead') && !$user->hasRole('sales')) {
             $isAssigned = $project->assignments()
                 ->where('status', 'active')
                 ->where('assigned_to_user_id', $user->id)
@@ -183,6 +190,21 @@ class ProjectController extends Controller
     {
         $user = Auth::user();
         $oldData = $project->toArray();
+
+        // Sales: can update their own created projects (all fields)
+        if ($user && $user->hasRole('sales')) {
+            if ((int) $project->created_by !== (int) $user->id) {
+                return response()->json(['success' => false, 'message' => 'You can only update projects you created'], 403);
+            }
+            $project->update($request->validated());
+            AuditLogService::logUpdate('project', $project->id, $oldData, $project->fresh()->toArray(), $request);
+            $project->load(['projectType', 'projectManager', 'team', 'creator']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Project updated successfully',
+                'data' => new ProjectResource($project),
+            ]);
+        }
 
         // Employee: can only change status, and only on their assigned projects
         if ($user && $user->hasRole('employee')) {
@@ -240,7 +262,13 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $user = Auth::user();
-        if (!$user || !$user->hasAnyRole(['admin', 'project_manager'])) {
+        
+        // Sales can delete their own created projects
+        if ($user && $user->hasRole('sales')) {
+            if ((int) $project->created_by !== (int) $user->id) {
+                return response()->json(['success' => false, 'message' => 'You can only delete projects you created'], 403);
+            }
+        } elseif (!$user || !$user->hasAnyRole(['admin', 'project_manager'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',
@@ -301,7 +329,13 @@ class ProjectController extends Controller
     public function assignToTL(Request $request, Project $project)
     {
         $user = Auth::user();
-        if (!$user->hasAnyRole(['admin', 'project_manager'])) {
+        
+        // Sales can only assign their own created projects
+        if ($user->hasRole('sales')) {
+            if ((int) $project->created_by !== (int) $user->id) {
+                return response()->json(['success' => false, 'message' => 'You can only assign projects you created'], 403);
+            }
+        } elseif (!$user->hasAnyRole(['admin', 'project_manager'])) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -434,6 +468,10 @@ class ProjectController extends Controller
         $user = Auth::user();
 
         // Same visibility as show(): whoever can view the project can also view history
+        // Sales: can only view history of projects they created
+        if ($user->hasRole('sales') && (int) $project->created_by !== (int) $user->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
         if ($user->hasRole('project_manager') && (int) $project->project_manager_id !== (int) $user->id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
@@ -447,7 +485,7 @@ class ProjectController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
         }
-        if (!$user->hasRole('admin') && !$user->hasRole('project_manager') && !$user->hasRole('team_lead')) {
+        if (!$user->hasRole('admin') && !$user->hasRole('project_manager') && !$user->hasRole('team_lead') && !$user->hasRole('sales')) {
             $isAssigned = $project->assignments()
                 ->where('status', 'active')
                 ->where('assigned_to_user_id', $user->id)

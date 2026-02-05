@@ -53,8 +53,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::delete('/teams/{team}/members/{user}', [\App\Http\Controllers\Api\TeamController::class, 'removeMember']);
     });
 
-    // Project Type management – Admin only
-    Route::middleware(['role:admin'])->group(function () {
+    // Project Type management – Admin or Sales
+    Route::middleware(['role:admin,sales'])->group(function () {
         Route::apiResource('project-types', \App\Http\Controllers\Api\ProjectTypeController::class);
     });
 

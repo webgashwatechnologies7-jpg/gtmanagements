@@ -137,7 +137,7 @@
             <span class="nav-icon">👥</span>
             <span class="nav-text">Department</span>
           </router-link>
-          <router-link v-if="isAdmin()" to="/project-types" class="nav-item" active-class="active">
+          <router-link v-if="isAdmin() || isSales()" to="/project-types" class="nav-item" active-class="active">
             <span class="nav-icon">📋</span>
             <span class="nav-text">Project Types</span>
           </router-link>
@@ -220,6 +220,7 @@ const isAdminOrHR = () => authStore.hasAnyRole(['admin', 'hr'])
 const isPM = () => authStore.hasRole('project_manager')
 const isTL = () => authStore.hasAnyRole(['team_lead', 'team_leader'])
 const isEmployee = () => authStore.hasRole('employee')
+const isSales = () => authStore.hasRole('sales')
 
 function checkMobile() {
   isMobile.value = window.innerWidth < 1024

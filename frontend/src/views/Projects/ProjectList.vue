@@ -187,13 +187,15 @@ const authStore = useAuthStore()
 const isTL = computed(() => authStore.hasAnyRole(['team_lead', 'team_leader']))
 const isEmployee = computed(() => authStore.hasRole('employee'))
 const isAdminOrPM = computed(() => authStore.hasAnyRole(['admin', 'project_manager']))
+const isSales = computed(() => authStore.hasRole('sales'))
 
+// Sales: can create projects, edit/delete their own, assign TL to their own projects
 // Employee: can only view projects, change status and create tasks (on their assigned projects)
-const canAddProject = computed(() => isAdminOrPM.value)
-const canEditProject = computed(() => isAdminOrPM.value || isTL.value)
-const canDeleteProject = computed(() => isAdminOrPM.value)
-const canAssignTL = computed(() => isAdminOrPM.value)
-const canChangeStatus = computed(() => isTL.value || isEmployee.value)
+const canAddProject = computed(() => isAdminOrPM.value || isSales.value)
+const canEditProject = computed(() => isAdminOrPM.value || isTL.value || isSales.value)
+const canDeleteProject = computed(() => isAdminOrPM.value || isSales.value)
+const canAssignTL = computed(() => isAdminOrPM.value || isSales.value)
+const canChangeStatus = computed(() => isTL.value || isEmployee.value || isSales.value)
 // Employee / TL: projects in list are assigned to them, so they can create tasks
 const canCreateTaskForProject = computed(() => isEmployee.value || isTL.value)
 

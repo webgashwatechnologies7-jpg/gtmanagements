@@ -13,19 +13,22 @@ return new class extends Migration
     {
         Schema::create('daily_plan_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('daily_plan_id')->constrained()->onDelete('cascade');
-            $table->foreignId('project_id')->constrained()->onDelete('cascade');
-            $table->foreignId('task_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('daily_plan_id');
+            $table->unsignedBigInteger('project_id');
+            $table->unsignedBigInteger('task_id')->nullable();
             $table->decimal('planned_hours', 5, 2);
             $table->text('description')->nullable();
             $table->enum('priority', ['high', 'medium', 'low'])->default('medium');
             $table->timestamps();
-            
+
+            $table->foreign('daily_plan_id')->references('id')->on('daily_plans')->onDelete('cascade');
+            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
+            // task_id FK added in later migration (tasks table is created after this)
+
             $table->index('daily_plan_id');
             $table->index('project_id');
         });
     }
-
     /**
      * Reverse the migrations.
      */

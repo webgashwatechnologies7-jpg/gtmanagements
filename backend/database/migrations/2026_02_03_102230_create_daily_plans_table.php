@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('status', ['draft', 'submitted'])->default('draft');
             $table->timestamp('submitted_at')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'date']);
             $table->index('user_id');
             $table->index('date');

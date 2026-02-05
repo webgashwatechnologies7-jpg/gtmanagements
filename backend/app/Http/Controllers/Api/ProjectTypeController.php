@@ -54,12 +54,12 @@ class ProjectTypeController extends Controller
     }
 
     /**
-     * Store a newly created project type (Admin only)
+     * Store a newly created project type (Admin or Sales)
      */
     public function store(StoreProjectTypeRequest $request)
     {
-        if (!Auth::user()->hasRole('admin')) {
-            return response()->json(['success' => false, 'message' => 'Only Admin can create project types.'], 403);
+        if (!Auth::user()->hasAnyRole(['admin', 'sales'])) {
+            return response()->json(['success' => false, 'message' => 'Only Admin or Sales can create project types.'], 403);
         }
         $projectType = ProjectType::create($request->validated());
 
@@ -84,12 +84,12 @@ class ProjectTypeController extends Controller
     }
 
     /**
-     * Update the specified project type (Admin only)
+     * Update the specified project type (Admin or Sales)
      */
     public function update(UpdateProjectTypeRequest $request, ProjectType $projectType)
     {
-        if (!Auth::user()->hasRole('admin')) {
-            return response()->json(['success' => false, 'message' => 'Only Admin can update project types.'], 403);
+        if (!Auth::user()->hasAnyRole(['admin', 'sales'])) {
+            return response()->json(['success' => false, 'message' => 'Only Admin or Sales can update project types.'], 403);
         }
         $projectType->update($request->validated());
 
@@ -101,12 +101,12 @@ class ProjectTypeController extends Controller
     }
 
     /**
-     * Remove the specified project type (Admin only)
+     * Remove the specified project type (Admin or Sales)
      */
     public function destroy(ProjectType $projectType)
     {
-        if (!Auth::user()->hasRole('admin')) {
-            return response()->json(['success' => false, 'message' => 'Only Admin can delete project types.'], 403);
+        if (!Auth::user()->hasAnyRole(['admin', 'sales'])) {
+            return response()->json(['success' => false, 'message' => 'Only Admin or Sales can delete project types.'], 403);
         }
         // Check if project type has projects
         if ($projectType->projects()->count() > 0) {
